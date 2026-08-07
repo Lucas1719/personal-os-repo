@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resumidor de Estudio — Personal OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1115; --panel:#171A21; --panel2:#1D212B; --border:#262B35;
+    --text:#E8E6E1; --text2:#8B92A3; --teal:#4FD1C5; --amber:#F0B429;
+    --green:#3FB950; --red:#E5484D;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+  .wrap{max-width:1000px;margin:0 auto;padding:48px 24px 80px;}
+  header{margin-bottom:36px;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:10px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:34px;margin:0 0 8px;font-weight:700;}
+  .sub{color:var(--text2);font-size:15px;max-width:560px;line-height:1.55;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px;}
+  @media(max-width:840px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;}
+  .card h2{font-family:'Space Grotesk',sans-serif;font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);}
+  textarea{width:100%;min-height:280px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:14px;resize:vertical;line-height:1.5;}
+  textarea:focus{outline:none;border-color:var(--teal);}
+  .controls{display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap;}
+  select,button{font-family:'Inter',sans-serif;font-size:13px;border-radius:8px;border:1px solid var(--border);padding:9px 14px;background:var(--panel2);color:var(--text);cursor:pointer;}
+  button.primary{background:var(--teal);color:#0F1115;font-weight:600;border:none;}
+  button.primary:hover{filter:brightness(1.08);}
+  button:hover{border-color:var(--teal);}
+  .count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);margin-left:auto;}
+  .summary-out{min-height:280px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:14px;line-height:1.6;overflow-y:auto;max-height:400px;}
+  .summary-out p{margin:0 0 10px;}
+  .placeholder{color:var(--text2);font-style:italic;}
+  .section-title{font-family:'Space Grotesk',sans-serif;font-size:20px;margin:44px 0 6px;font-weight:600;}
+  .section-sub{color:var(--text2);font-size:13.5px;margin-bottom:18px;}
+  .flash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+  .flashcard{perspective:1000px;height:150px;cursor:pointer;}
+  .flashcard-inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d;}
+  .flashcard.flipped .flashcard-inner{transform:rotateY(180deg);}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;padding:16px;display:flex;flex-direction:column;justify-content:center;border:1px solid var(--border);}
+  .face.front{background:var(--panel2);}
+  .face.back{background:linear-gradient(155deg,#1B3B38,#152521);transform:rotateY(180deg);}
+  .face-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--teal);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+  .face-text{font-size:13.5px;line-height:1.45;}
+  .empty-state{color:var(--text2);font-size:13.5px;padding:24px;border:1px dashed var(--border);border-radius:12px;text-align:center;}
+  .toolbar-mini{display:flex;gap:10px;margin-bottom:16px;}
+  .stat{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);}
+  .stat b{color:var(--teal);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Learning Intelligence · Personal OS</div>
+    <h1>Resumidor de estudio</h1>
+    <div class="sub">Pegá cualquier texto — apuntes, artículos, documentación técnica — y generá un resumen extractivo más flashcards interactivas para repasar. Todo corre localmente en el navegador, sin enviar datos a ningún servidor.</div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2><span class="dot"></span>Texto de entrada</h2>
+      <textarea id="inputText" placeholder="Pegá acá el texto que querés estudiar..."></textarea>
+      <div class="controls">
+        <select id="density">
+          <option value="0.15">Resumen breve</option>
+          <option value="0.3" selected>Resumen medio</option>
+          <option value="0.5">Resumen extenso</option>
+        </select>
+        <button class="primary" onclick="procesar()">Generar resumen + flashcards</button>
+        <span class="count" id="wordCount">0 palabras</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="dot" style="background:var(--amber)"></span>Resumen</h2>
+      <div class="summary-out" id="summaryOut"><span class="placeholder">El resumen va a aparecer acá después de procesar el texto.</span></div>
+    </div>
+  </div>
+
+  <div class="section-title">Flashcards</div>
+  <div class="section-sub">Click en cada tarjeta para dar vuelta y ver la respuesta. Se generan automáticamente a partir de las oraciones más relevantes del texto.</div>
+  <div class="toolbar-mini" id="flashToolbar" style="display:none;">
+    <span class="stat"><b id="flashCount">0</b> tarjetas generadas</span>
+  </div>
+  <div class="flash-grid" id="flashGrid">
+    <div class="empty-state">Todavía no generaste flashcards. Pegá un texto arriba y presioná "Generar resumen + flashcards".</div>
+  </div>
+</div>
+
+<script>
+const inputText = document.getElementById('inputText');
+inputText.addEventListener('input', () => {
+  const words = inputText.value.trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('wordCount').textContent = words + ' palabras';
+});
+
+const STOPWORDS = new Set(("de la que el en y a los del se las por un para con no una su al lo como más pero sus le ya o este sí porque esta entre cuando muy sin sobre también me hasta hay donde quien desde todo nos durante todos uno les ni contra otros ese eso ante ellos e esto mí antes algunos qué unos yo desde nosotros mientras hemos hay ser está están son fue eran fueron es ha han estado tiene tener").split(" "));
+
+function splitSentences(text){
+  return text.replace(/\n+/g,' ').split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(s=>s.length>25);
+}
+
+function scoreSentences(sentences){
+  const freq = {};
+  sentences.forEach(s=>{
+    s.toLowerCase().replace(/[^a-záéíóúñü\s]/gi,'').split(/\s+/).forEach(w=>{
+      if(w.length>3 && !STOPWORDS.has(w)) freq[w]=(freq[w]||0)+1;
+    });
+  });
+  return sentences.map(s=>{
+    const words = s.toLowerCase().replace(/[^a-záéíóúñü\s]/gi,'').split(/\s+/);
+    let score = 0;
+    words.forEach(w=>{ if(freq[w]) score += freq[w]; });
+    return { text: s, score: score / Math.max(words.length,1) };
+  });
+}
+
+function procesar(){
+  const raw = inputText.value.trim();
+  if(!raw){ return; }
+  const density = parseFloat(document.getElementById('density').value);
+  const sentences = splitSentences(raw);
+  if(sentences.length === 0){
+    document.getElementById('summaryOut').innerHTML = '<span class="placeholder">No se detectaron oraciones suficientemente largas para resumir.</span>';
+    return;
+  }
+  const scored = scoreSentences(sentences);
+  const n = Math.max(2, Math.round(sentences.length * density));
+  const top = [...scored].sort((a,b)=>b.score-a.score).slice(0, n);
+  const topSet = new Set(top.map(t=>t.text));
+  const ordered = sentences.filter(s=>topSet.has(s));
+
+  document.getElementById('summaryOut').innerHTML = ordered.map(s=>`<p>${escapeHtml(s)}</p>`).join('');
+
+  const flashSource = [...scored].sort((a,b)=>b.score-a.score).slice(0, Math.min(8, Math.max(4,Math.round(n*0.8))));
+  renderFlashcards(flashSource.map(s=>s.text));
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+
+function makeQuestion(sentence){
+  const words = sentence.split(/\s+/);
+  if(words.length > 6){
+    const cut = Math.floor(words.length*0.55);
+    return words.slice(0,cut).join(' ') + ' …?';
+  }
+  return '¿Qué dice el texto sobre este punto?';
+}
+
+function renderFlashcards(sentences){
+  const grid = document.getElementById('flashGrid');
+  const toolbar = document.getElementById('flashToolbar');
+  if(sentences.length === 0){
+    grid.innerHTML = '<div class="empty-state">No se pudieron generar flashcards de este texto.</div>';
+    toolbar.style.display = 'none';
+    return;
+  }
+  toolbar.style.display = 'flex';
+  document.getElementById('flashCount').textContent = sentences.length;
+  grid.innerHTML = sentences.map((s,i)=>`
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="flashcard-inner">
+        <div class="face front">
+          <div class="face-label">Pregunta ${i+1}</div>
+          <div class="face-text">${escapeHtml(makeQuestion(s))}</div>
+        </div>
+        <div class="face back">
+          <div class="face-label">Respuesta</div>
+          <div class="face-text">${escapeHtml(s)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Bayesiano ETH · Personal OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1115; --panel:#171A21; --panel2:#1D212B; --border:#262B35;
+    --text:#E8E6E1; --text2:#8B92A3; --teal:#4FD1C5; --amber:#F0B429;
+    --green:#3FB950; --red:#E5484D;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+  .wrap{max-width:1180px;margin:0 auto;padding:44px 24px 90px;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:10px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:30px;margin:0 0 8px;font-weight:700;}
+  .sub{color:var(--text2);font-size:14.5px;max-width:660px;line-height:1.55;margin-bottom:8px;}
+  .note{color:var(--text2);font-size:12px;font-family:'JetBrains Mono',monospace;margin-bottom:30px;}
+
+  .layout{display:grid;grid-template-columns:340px 1fr;gap:22px;}
+  @media(max-width:940px){.layout{grid-template-columns:1fr;}}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;}
+  .card h2{font-family:'Space Grotesk',sans-serif;font-size:15px;margin:0 0 4px;}
+  .card .h-sub{font-size:12px;color:var(--text2);margin:0 0 16px;line-height:1.5;}
+
+  label{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em;}
+  label:first-child{margin-top:0;}
+  input, select, textarea{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;padding:9px 11px;}
+  input:focus, select:focus, textarea:focus{outline:none;border-color:var(--teal);}
+  textarea{min-height:60px;resize:vertical;}
+  .signal-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .sig-btn{padding:9px 0;text-align:center;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--panel2);}
+  .sig-btn.green.active{background:rgba(63,185,80,.16);border-color:var(--green);color:var(--green);}
+  .sig-btn.yellow.active{background:rgba(240,180,41,.16);border-color:var(--amber);color:var(--amber);}
+  .sig-btn.red.active{background:rgba(229,72,77,.16);border-color:var(--red);color:var(--red);}
+  .submit-btn{width:100%;margin-top:18px;background:var(--teal);color:#0F1115;font-weight:600;border:none;border-radius:8px;padding:11px;font-size:13.5px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .submit-btn:hover{filter:brightness(1.08);}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px;}
+  .stat-card{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:16px;}
+  .stat-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:8px;}
+  .stat-value{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;}
+  .stat-value.na{color:var(--text2);font-size:16px;}
+  .stat-sub{font-size:11px;color:var(--text2);margin-top:4px;}
+  .bar{height:5px;background:var(--border);border-radius:3px;margin-top:10px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--teal);}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);padding:8px 10px;border-bottom:1px solid var(--border);}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+  .pill.green{background:rgba(63,185,80,.16);color:var(--green);}
+  .pill.yellow{background:rgba(240,180,41,.16);color:var(--amber);}
+  .pill.red{background:rgba(229,72,77,.16);color:var(--red);}
+  .pill.win{background:rgba(63,185,80,.16);color:var(--green);}
+  .pill.loss{background:rgba(229,72,77,.16);color:var(--red);}
+  .pill.open{background:rgba(240,180,41,.14);color:var(--amber);}
+  .empty-log{color:var(--text2);font-size:13px;padding:30px;text-align:center;border:1px dashed var(--border);border-radius:12px;}
+  .del-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;}
+  .del-btn:hover{color:var(--red);}
+  .section-title{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:26px 0 6px;}
+  .section-sub{font-size:12.5px;color:var(--text2);margin:0 0 14px;}
+  .top-setup{background:linear-gradient(155deg,#1B3B38,#152521);border:1px solid #1F4D45;border-radius:14px;padding:18px 20px;margin-bottom:22px;}
+  .top-setup .label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .top-setup .val{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;}
+  .reset-link{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);text-decoration:underline;cursor:pointer;float:right;}
+
+  .open-card{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+  .open-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .open-meta{font-size:12.5px;color:var(--text2);line-height:1.6;}
+  .open-meta b{color:var(--text);}
+  .close-row{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap;}
+  .close-row input{width:140px;flex:0 0 auto;}
+  .close-btn{padding:9px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--panel);}
+  .close-btn.win{border-color:var(--green);color:var(--green);}
+  .close-btn.win:hover{background:rgba(63,185,80,.12);}
+  .close-btn.loss{border-color:var(--red);color:var(--red);}
+  .close-btn.loss:hover{background:rgba(229,72,77,.12);}
+  .cancel-open{margin-left:auto;background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Investment Intelligence · Personal OS</div>
+  <h1>Panel bayesiano de operaciones</h1>
+  <div class="sub">Registrá cada operación de ETH/USDT que ejecutes en Binance (Fase 1: con dinero ficticio / paper trading). El registro se hace en dos pasos: <b>abrís</b> la operación cuando tomás la decisión, y la <b>cerrás</b> después, cuando sepas si tocó take profit o stop loss. El sistema recalcula tu tasa de aciertos solo sobre operaciones cerradas.</div>
+  <div class="note">⚠️ Panel informativo — no constituye asesoramiento financiero. <span class="reset-link" onclick="resetAll()">Borrar historial</span></div>
+
+  <div class="layout">
+    <div class="card">
+      <h2>1 · Abrir operación</h2>
+      <div class="h-sub">Cargá esto apenas tomás la decisión, antes de ejecutar en Binance. Todavía no hace falta saber el resultado.</div>
+      <label>Fecha</label>
+      <input type="date" id="f-date">
+      <label>Precio de entrada (USD)</label>
+      <input type="number" id="f-price" step="0.01" placeholder="1866.48">
+      <label>Fear &amp; Greed Index (0–100)</label>
+      <input type="number" id="f-fg" min="0" max="100" placeholder="45">
+      <label>Score técnico (EDA en vivo, 0–100)</label>
+      <input type="number" id="f-scoretec" min="0" max="100" placeholder="78">
+      <label>Modelo predictivo — Prob. de suba (%, experimental)</label>
+      <input type="number" id="f-probpred" min="0" max="100" placeholder="45">
+      <label>Señal / Decisión</label>
+      <div class="signal-row" id="decisionRow">
+        <div class="sig-btn green" data-decision="comprar" onclick="selectDecision(this)">🟢 Comprar</div>
+        <div class="sig-btn yellow" data-decision="nada" onclick="selectDecision(this)">🟡 No hacer nada</div>
+        <div class="sig-btn red" data-decision="vender" onclick="selectDecision(this)">🔴 Vender</div>
+      </div>
+      <label>Objetivo de la operación (TP / SL)</label>
+      <input type="text" id="f-objetivo" placeholder="+8% TP / -10% SL">
+      <label>Viabilidad estimada (%)</label>
+      <input type="number" id="f-viabilidad" min="0" max="100" placeholder="55">
+      <label>Notas (contexto subjetivo)</label>
+      <textarea id="f-notes" placeholder="Ej: seguí la recomendación del mail, dudé al inicio..."></textarea>
+      <button class="submit-btn" onclick="addTrade()">Abrir operación</button>
+    </div>
+
+    <div>
+      <div class="top-setup" id="topSetup">
+        <div class="label">Mejor setup detectado</div>
+        <div class="val">Cerrá al menos 3 operaciones para ver tu mejor combinación</div>
+      </div>
+
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="section-title">2 · Operaciones abiertas — esperando resultado</div>
+      <div class="section-sub">Cuando Binance te avise que tocaste take profit o stop loss, volvé acá y cerrá la operación correspondiente.</div>
+      <div id="openTradesWrap"></div>
+
+      <div class="section-title">Historial — operaciones cerradas</div>
+      <div id="logTableWrap"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'personalOS_ethTradingLog';
+let selectedDecision = null;
+let trades = [];
+
+function load(){
+  try{ trades = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e){ trades = []; }
+}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(trades)); }
+
+function selectDecision(el){
+  el.parentElement.querySelectorAll('.sig-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  selectedDecision = el.dataset.decision;
+}
+
+function addTrade(){
+  const date = document.getElementById('f-date').value;
+  const price = parseFloat(document.getElementById('f-price').value);
+  const fg = parseInt(document.getElementById('f-fg').value);
+  const scoreTecnico = parseInt(document.getElementById('f-scoretec').value);
+  const probPredictivo = parseInt(document.getElementById('f-probpred').value);
+  const objetivo = document.getElementById('f-objetivo').value;
+  const viabilidad = parseInt(document.getElementById('f-viabilidad').value);
+  const notes = document.getElementById('f-notes').value;
+  if(!date || isNaN(price) || isNaN(fg) || !selectedDecision){
+    alert('Completá fecha, precio, Fear & Greed y señal/decisión antes de abrir la operación.');
+    return;
+  }
+  trades.push({
+    id: Date.now() + Math.random().toString(36).slice(2,7),
+    date, price, fg,
+    scoreTecnico: isNaN(scoreTecnico) ? null : scoreTecnico,
+    probPredictivo: isNaN(probPredictivo) ? null : probPredictivo,
+    decision: selectedDecision,
+    objetivo: objetivo || null,
+    viabilidad: isNaN(viabilidad) ? null : viabilidad,
+    notes,
+    status: 'abierta',
+    result: null,
+    closeDate: null,
+    closePrice: null
+  });
+  save();
+  document.getElementById('f-date').value = '';
+  document.getElementById('f-price').value = '';
+  document.getElementById('f-fg').value = '';
+  document.getElementById('f-scoretec').value = '';
+  document.getElementById('f-probpred').value = '';
+  document.getElementById('f-objetivo').value = '';
+  document.getElementById('f-viabilidad').value = '';
+  document.getElementById('f-notes').value = '';
+  document.querySelectorAll('.sig-btn').forEach(b=>b.classList.remove('active'));
+  selectedDecision = null;
+  render();
+}
+
+function closeTrade(id, result){
+  const t = trades.find(t=>t.id===id);
+  if(!t) return;
+  const closePriceInput = document.getElementById('close-price-'+id);
+  const closePrice = closePriceInput ? parseFloat(closePriceInput.value) : NaN;
+  t.status = 'cerrada';
+  t.result = result;
+  t.closeDate = new Date().toISOString().slice(0,10);
+  t.closePrice = isNaN(closePrice) ? null : closePrice;
+  save();
+  render();
+}
+
+function deleteTrade(id){
+  trades = trades.filter(t=>t.id!==id);
+  save();
+  render();
+}
+
+function resetAll(){
+  if(confirm('¿Borrar todo el historial de operaciones (abiertas y cerradas)? Esta acción no se puede deshacer.')){
+    trades = [];
+    save();
+    render();
+  }
+}
+
+function prob(filterFn){
+  const subset = trades.filter(t=>t.status==='cerrada').filter(filterFn);
+  if(subset.length === 0) return null;
+  const wins = subset.filter(t=>t.result==='ganancia').length;
+  return { p: wins/subset.length, n: subset.length };
+}
+
+function fmtP(res){
+  if(!res) return { text: 'Sin datos', sub: '0 operaciones', pct: 0, na: true };
+  return { text: Math.round(res.p*100) + '%', sub: res.n + ' operación' + (res.n===1?'':'es'), pct: res.p*100, na: false };
+}
+
+function decisionLabel(d){
+  return d==='comprar' ? '🟢 comprar' : d==='nada' ? '🟡 no hacer nada' : '🔴 vender';
+}
+function decisionColorClass(d){
+  return d==='comprar' ? 'green' : d==='nada' ? 'yellow' : 'red';
+}
+
+function render(){
+  const openTrades = trades.filter(t=>t.status==='abierta').sort((a,b)=> new Date(b.date) - new Date(a.date));
+  const closedTrades = trades.filter(t=>t.status==='cerrada');
+
+  // stats — solo sobre cerradas
+  const stats = [
+    { label: '🟢 Tasa de aciertos — Comprar', res: prob(t=>t.decision==='comprar') },
+    { label: '🟡 Tasa de aciertos — No hacer nada', res: prob(t=>t.decision==='nada') },
+    { label: '🔴 Tasa de aciertos — Vender', res: prob(t=>t.decision==='vender') },
+    { label: 'P(ganancia | F&G < 40, miedo)', res: prob(t=>t.fg<40) },
+    { label: 'P(ganancia | F&G > 60, codicia)', res: prob(t=>t.fg>60) },
+    { label: 'P(ganancia | score técnico ≥ 70)', res: prob(t=>t.scoreTecnico!=null && t.scoreTecnico>=70) },
+    { label: 'P(ganancia | score técnico < 40)', res: prob(t=>t.scoreTecnico!=null && t.scoreTecnico<40) },
+    { label: 'P(ganancia | modelo predijo suba > 50%)', res: prob(t=>t.probPredictivo!=null && t.probPredictivo>50) },
+    { label: 'P(ganancia | total histórico cerrado)', res: prob(()=>true) },
+  ];
+  document.getElementById('statsGrid').innerHTML = stats.map(s=>{
+    const f = fmtP(s.res);
+    return `<div class="stat-card">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value ${f.na?'na':''}">${f.text}</div>
+      <div class="stat-sub">${f.sub}</div>
+      <div class="bar"><div class="bar-fill" style="width:${f.pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  // best setup — combination of decision + F&G bucket, solo cerradas
+  const combos = [
+    { label: '🟢 Comprar + F&G < 40 (miedo)', res: prob(t=>t.decision==='comprar' && t.fg<40) },
+    { label: '🟢 Comprar + F&G > 60 (codicia)', res: prob(t=>t.decision==='comprar' && t.fg>60) },
+    { label: '🟡 No hacer nada + F&G < 40 (miedo)', res: prob(t=>t.decision==='nada' && t.fg<40) },
+    { label: '🟡 No hacer nada + F&G > 60 (codicia)', res: prob(t=>t.decision==='nada' && t.fg>60) },
+    { label: '🔴 Vender + F&G < 40 (miedo)', res: prob(t=>t.decision==='vender' && t.fg<40) },
+    { label: '🔴 Vender + F&G > 60 (codicia)', res: prob(t=>t.decision==='vender' && t.fg>60) },
+  ].filter(c => c.res && c.res.n >= 2);
+
+  const topSetup = document.getElementById('topSetup');
+  if(combos.length === 0){
+    topSetup.querySelector('.val').textContent = closedTrades.length < 3
+      ? 'Cerrá al menos 3 operaciones para ver tu mejor combinación'
+      : 'Necesitás al menos 2 operaciones cerradas en un mismo combo de decisión + F&G';
+  } else {
+    combos.sort((a,b)=>b.res.p - a.res.p);
+    const best = combos[0];
+    topSetup.querySelector('.val').textContent = `${best.label} → ${Math.round(best.res.p*100)}% de aciertos (${best.res.n} operaciones)`;
+  }
+
+  // operaciones abiertas
+  const openWrap = document.getElementById('openTradesWrap');
+  if(openTrades.length === 0){
+    openWrap.innerHTML = '<div class="empty-log">No tenés operaciones abiertas esperando resultado. Cargá una arriba cuando tomes una decisión.</div>';
+  } else {
+    openWrap.innerHTML = openTrades.map(t=>`
+      <div class="open-card">
+        <div class="open-head">
+          <span class="pill ${decisionColorClass(t.decision)}">${decisionLabel(t.decision)}</span>
+          <span class="pill open">⏳ abierta desde ${t.date}</span>
+          <button class="cancel-open" onclick="deleteTrade('${t.id}')">Eliminar</button>
+        </div>
+        <div class="open-meta">
+          <b>Entrada:</b> $${t.price.toLocaleString('es-AR')} &nbsp;·&nbsp;
+          <b>F&amp;G:</b> ${t.fg} &nbsp;·&nbsp;
+          <b>Score técnico:</b> ${t.scoreTecnico!=null ? t.scoreTecnico+'/100' : '—'} &nbsp;·&nbsp;
+          <b>Modelo pred.:</b> ${t.probPredictivo!=null ? t.probPredictivo+'%' : '—'} &nbsp;·&nbsp;
+          <b>Objetivo:</b> ${t.objetivo ? escapeHtml(t.objetivo) : '—'} &nbsp;·&nbsp;
+          <b>Viabilidad:</b> ${t.viabilidad!=null ? t.viabilidad+'%' : '—'}
+          ${t.notes ? '<br><b>Notas:</b> '+escapeHtml(t.notes) : ''}
+        </div>
+        <div class="close-row">
+          <input type="number" step="0.01" id="close-price-${t.id}" placeholder="Precio de salida (opcional)">
+          <button class="close-btn win" onclick="closeTrade('${t.id}','ganancia')">✓ Cerrar en ganancia</button>
+          <button class="close-btn loss" onclick="closeTrade('${t.id}','perdida')">✕ Cerrar en pérdida</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // historial cerradas
+  const wrap = document.getElementById('logTableWrap');
+  if(closedTrades.length === 0){
+    wrap.innerHTML = '<div class="empty-log">Todavía no cerraste ninguna operación. Cuando cierres una de las de arriba, va a aparecer acá.</div>';
+    return;
+  }
+  const sorted = [...closedTrades].sort((a,b)=> new Date(b.closeDate) - new Date(a.closeDate));
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Apertura</th><th>Cierre</th><th>Entrada</th><th>Salida</th><th>F&amp;G</th><th>Score téc.</th><th>Mod. pred.</th><th>Señal</th><th>Objetivo</th><th>Viab.</th><th>Resultado</th><th>Notas</th><th></th></tr></thead>
+    <tbody>
+      ${sorted.map(t=>`<tr>
+        <td>${t.date}</td>
+        <td>${t.closeDate}</td>
+        <td>$${t.price.toLocaleString('es-AR')}</td>
+        <td>${t.closePrice!=null ? '$'+t.closePrice.toLocaleString('es-AR') : '—'}</td>
+        <td>${t.fg}</td>
+        <td>${t.scoreTecnico!=null ? t.scoreTecnico : '—'}</td>
+        <td>${t.probPredictivo!=null ? t.probPredictivo+'%' : '—'}</td>
+        <td><span class="pill ${decisionColorClass(t.decision)}">${decisionLabel(t.decision)}</span></td>
+        <td style="color:var(--text2);">${t.objetivo ? escapeHtml(t.objetivo) : '—'}</td>
+        <td style="color:var(--text2);">${t.viabilidad!=null ? t.viabilidad+'%' : '—'}</td>
+        <td><span class="pill ${t.result==='ganancia'?'win':'loss'}">${t.result}</span></td>
+        <td style="color:var(--text2);max-width:180px;">${t.notes ? escapeHtml(t.notes) : '—'}</td>
+        <td><button class="del-btn" onclick="deleteTrade('${t.id}')">✕</button></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+load();
+render();
+</script>
+</body>
+</html>

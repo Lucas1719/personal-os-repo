@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía n8n — Triage de correos · Personal OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1115; --panel:#171A21; --panel2:#1D212B; --border:#262B35;
+    --text:#E8E6E1; --text2:#8B92A3; --teal:#4FD1C5; --amber:#F0B429;
+    --green:#3FB950; --red:#E5484D;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+  .wrap{max-width:920px;margin:0 auto;padding:48px 24px 90px;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:10px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:32px;margin:0 0 8px;font-weight:700;}
+  .sub{color:var(--text2);font-size:15px;max-width:600px;line-height:1.55;margin-bottom:30px;}
+  .status{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:8px 16px;font-family:'JetBrains Mono',monospace;font-size:12.5px;margin-bottom:36px;}
+  .status .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);}
+  .flow{position:relative;padding-left:38px;}
+  .flow::before{content:'';position:absolute;left:12px;top:10px;bottom:10px;width:2px;background:linear-gradient(var(--teal),var(--border));}
+  .node{position:relative;margin-bottom:26px;}
+  .node::before{content:'';position:absolute;left:-38px;top:6px;width:24px;height:24px;border-radius:50%;background:var(--panel2);border:2px solid var(--teal);}
+  .node.pending::before{border-color:var(--amber);}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px 22px;}
+  .node-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+  .node-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 10px;border-radius:999px;letter-spacing:.03em;}
+  .badge.ready{background:rgba(79,209,197,.14);color:var(--teal);}
+  .badge.pending{background:rgba(240,180,41,.14);color:var(--amber);}
+  .node-desc{color:var(--text2);font-size:13.5px;line-height:1.55;margin-bottom:10px;}
+  .kv{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);}
+  .kv b{color:var(--teal);}
+  .section-title{font-family:'Space Grotesk',sans-serif;font-size:22px;margin:52px 0 14px;font-weight:600;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:700px){.grid2{grid-template-columns:1fr;}}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;}
+  .box h3{font-family:'Space Grotesk',sans-serif;font-size:14.5px;margin:0 0 10px;}
+  .box ul{margin:0;padding-left:18px;color:var(--text2);font-size:13.5px;line-height:1.7;}
+  .checklist{list-style:none;margin:0;padding:0;}
+  .checklist li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+  .checklist li:last-child{border-bottom:none;}
+  .checklist .box-check{width:16px;height:16px;border:1.5px solid var(--teal);border-radius:4px;flex-shrink:0;margin-top:2px;}
+  code{font-family:'JetBrains Mono',monospace;background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:12.5px;color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Mail Intelligence · Personal OS</div>
+  <h1>Guía — Flujo de triage de correos en n8n</h1>
+  <div class="sub">Paso a paso para instalar y activar la Skill 1 (Triage de correos), que clasifica el mail entrante en Urgente / Delegar / Informativo todos los días hábiles a las 8:00 AM.</div>
+  <div class="status"><span class="dot"></span> Mail Intelligence — 75% completo · Skill de triage documentada, activación pendiente</div>
+
+  <div class="flow">
+    <div class="node">
+      <div class="card">
+        <div class="node-head">
+          <div class="node-title">1 · Conectar Gmail a n8n</div>
+          <span class="badge ready">Base lista</span>
+        </div>
+        <div class="node-desc">En n8n, agregar credencial de tipo Gmail OAuth2. Autorizar con la cuenta de correo que se quiere triagear. n8n va a pedir permisos de lectura y, más adelante, de envío.</div>
+        <div class="kv">Nodo: <b>Gmail Trigger</b> o <b>Gmail → Get Many</b> · Auth: <b>OAuth2</b></div>
+      </div>
+    </div>
+    <div class="node">
+      <div class="card">
+        <div class="node-head">
+          <div class="node-title">2 · Schedule Trigger</div>
+          <span class="badge ready">Listo</span>
+        </div>
+        <div class="node-desc">Dispara el flujo automáticamente de lunes a viernes a las 8:00 AM. Es el mismo patrón usado en el Monitor ETH Diario.</div>
+        <div class="kv">Cron: <b>0 8 * * 1-5</b></div>
+      </div>
+    </div>
+    <div class="node">
+      <div class="card">
+        <div class="node-head">
+          <div class="node-title">3 · Traer correos del día</div>
+          <span class="badge ready">Listo</span>
+        </div>
+        <div class="node-desc">Nodo Gmail configurado para traer los correos recibidos desde el último chequeo (o las últimas 24hs). Filtrar por bandeja de entrada, excluyendo spam y promociones.</div>
+        <div class="kv">Filtro sugerido: <b>after:</b> fecha del último run</div>
+      </div>
+    </div>
+    <div class="node">
+      <div class="card">
+        <div class="node-head">
+          <div class="node-title">4 · Code (JS) — estructurar los datos</div>
+          <span class="badge ready">Listo</span>
+        </div>
+        <div class="node-desc">Parsea remitente, asunto y cuerpo de cada correo en un formato limpio (JSON) para que Claude pueda clasificarlos sin ruido de headers ni HTML.</div>
+      </div>
+    </div>
+    <div class="node">
+      <div class="card">
+        <div class="node-head">
+          <div class="node-title">5 · Basic LLM Chain + Anthropic — clasificación</div>
+          <span class="badge ready">Listo</span>
+        </div>
+        <div class="node-desc">Claude clasifica cada correo en <b>Urgente</b>, <b>Delegar</b> o <b>Informativo</b>, con una razón breve por clasificación. El prompt está documentado en sistema-automatizacion-directora-arte.md.</div>
+        <div class="kv">Modelo sugerido: <b>Claude API</b> · Output: JSON con categoría + razón por correo</div>
+      </div>
+    </div>
+    <div class="node pending">
+      <div class="card">
+        <div class="node-head">
+          <div class="node-title">6 · Gmail Send — informe de triage</div>
+          <span class="badge pending">Pendiente</span>
+        </div>
+        <div class="node-desc">Arma y envía un correo resumen con los correos agrupados por categoría. Este es el mismo tipo de nodo pendiente en el flujo del Monitor ETH.</div>
+        <div class="kv">To: <b>tu email</b> · Subject: <b>Triage diario — [fecha]</b> · Message: reporte generado por Claude</div>
+      </div>
+    </div>
+    <div class="node pending">
+      <div class="card">
+        <div class="node-head">
+          <div class="node-title">7 · Activar el workflow</div>
+          <span class="badge pending">Pendiente</span>
+        </div>
+        <div class="node-desc">Toggle de Inactive a Active en la esquina superior derecha del editor de n8n. Sin este paso, el flujo queda guardado pero no corre solo.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Checklist antes de activar</div>
+  <div class="box">
+    <ul class="checklist">
+      <li><span class="box-check"></span>Credencial de Gmail OAuth2 conectada y probada con una ejecución manual</li>
+      <li><span class="box-check"></span>Prompt de clasificación revisado — confirmar que las 3 categorías (Urgente / Delegar / Informativo) tienen criterios claros</li>
+      <li><span class="box-check"></span>Nodo Gmail Send configurado con el destinatario correcto</li>
+      <li><span class="box-check"></span>Ejecución manual de prueba completa, de punta a punta, antes de activar el cron</li>
+      <li><span class="box-check"></span>Confirmar que el flujo respeta la regla de oro: no envía ni reenvía correos sin que el reporte pase primero por el operador</li>
+    </ul>
+  </div>
+
+  <div class="section-title">Referencias rápidas</div>
+  <div class="grid2">
+    <div class="box">
+      <h3>Categorías de triage</h3>
+      <ul>
+        <li><b style="color:var(--red)">Urgente</b> — requiere acción o respuesta el mismo día</li>
+        <li><b style="color:var(--amber)">Delegar</b> — puede resolverlo otra persona del equipo</li>
+        <li><b style="color:var(--teal)">Informativo</b> — solo para conocimiento, sin acción requerida</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Cómo se conecta con el resto del módulo</h3>
+      <ul>
+        <li>Alimenta la Skill "Agenda automática" (8:15 AM)</li>
+        <li>Se junta con el resumen de Zoom en el "Informe consolidado" (6:30 PM)</li>
+        <li>Corre en paralelo al Monitor ETH Diario, en el mismo entorno de n8n local</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</body>
+</html>

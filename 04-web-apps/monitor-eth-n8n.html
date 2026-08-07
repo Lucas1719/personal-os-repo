@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía — Monitor ETH Diario n8n · Personal OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1115; --panel:#171A21; --panel2:#1D212B; --border:#262B35;
+    --text:#E8E6E1; --text2:#8B92A3; --teal:#4FD1C5; --amber:#F0B429;
+    --green:#3FB950; --red:#E5484D;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+  .wrap{max-width:960px;margin:0 auto;padding:48px 24px 90px;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:10px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:32px;margin:0 0 8px;font-weight:700;}
+  .sub{color:var(--text2);font-size:15px;max-width:620px;line-height:1.55;margin-bottom:26px;}
+  .status{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:8px 16px;font-family:'JetBrains Mono',monospace;font-size:12.5px;margin-bottom:36px;}
+  .status .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);}
+
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);margin-bottom:28px;flex-wrap:wrap;}
+  .tab{font-family:'JetBrains Mono',monospace;font-size:12.5px;padding:10px 16px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;}
+  .tab.active{color:var(--teal);border-color:var(--teal);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .diagram{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-bottom:30px;}
+  .node-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;flex:1 1 130px;min-width:130px;position:relative;}
+  .node-box.pending{border-color:var(--amber);background:rgba(240,180,41,.05);}
+  .node-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:6px;}
+  .node-box.pending .node-num{color:var(--amber);}
+  .node-name{font-size:13px;font-weight:600;line-height:1.3;}
+  .arrow{align-self:center;color:var(--text2);font-size:18px;}
+
+  .section-title{font-family:'Space Grotesk',sans-serif;font-size:20px;margin:36px 0 12px;font-weight:600;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
+  .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;}
+  .card-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 10px;border-radius:999px;}
+  .badge.ready{background:rgba(79,209,197,.14);color:var(--teal);}
+  .badge.pending{background:rgba(240,180,41,.14);color:var(--amber);}
+  .card-desc{color:var(--text2);font-size:13.5px;line-height:1.6;}
+  code{font-family:'JetBrains Mono',monospace;background:var(--panel2);padding:2px 7px;border-radius:5px;font-size:12.5px;color:var(--amber);}
+  .steps{counter-reset:step;list-style:none;padding:0;margin:0;}
+  .steps li{counter-increment:step;position:relative;padding:14px 0 14px 40px;border-bottom:1px solid var(--border);font-size:13.5px;line-height:1.6;color:var(--text2);}
+  .steps li:last-child{border-bottom:none;}
+  .steps li::before{content:counter(step);position:absolute;left:0;top:12px;width:24px;height:24px;border-radius:50%;background:var(--panel2);border:1px solid var(--teal);color:var(--teal);font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;}
+  .steps li b{color:var(--text);}
+  .report-preview{background:#0C1B19;border:1px solid #1F4D45;border-radius:12px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.7;color:#B9E8E0;white-space:pre-wrap;}
+  .signal{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:600;}
+  .signal.yellow{background:rgba(240,180,41,.18);color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Investment Intelligence · Personal OS</div>
+  <h1>Guía — Monitor ETH Diario en n8n</h1>
+  <div class="sub">Instalación, estructura y funcionamiento del flujo que trae el precio de ETH, lo analiza con Claude y arma el reporte diario que alimenta el motor bayesiano de trading.</div>
+  <div class="status"><span class="dot"></span> 6 de 8 nodos funcionando — Gmail Send y Fear &amp; Greed pendientes</div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="flujo">Flujo completo</div>
+    <div class="tab" data-tab="instalar">Cómo instalar</div>
+    <div class="tab" data-tab="reporte">Reporte de ejemplo</div>
+  </div>
+
+  <div class="panel active" id="flujo">
+    <div class="diagram">
+      <div class="node-box"><div class="node-num">01</div><div class="node-name">Schedule Trigger</div></div>
+      <div class="arrow">→</div>
+      <div class="node-box"><div class="node-num">02</div><div class="node-name">HTTP — Precio ETH simple</div></div>
+      <div class="arrow">→</div>
+      <div class="node-box"><div class="node-num">03</div><div class="node-name">HTTP — Datos completos ETH</div></div>
+      <div class="arrow">→</div>
+      <div class="node-box"><div class="node-num">04</div><div class="node-name">Code (JS) — parseo</div></div>
+      <div class="arrow">→</div>
+      <div class="node-box"><div class="node-num">05</div><div class="node-name">LLM Chain + Anthropic</div></div>
+      <div class="arrow">→</div>
+      <div class="node-box"><div class="node-num">06</div><div class="node-name">Google Sheets — log</div></div>
+      <div class="arrow">→</div>
+      <div class="node-box pending"><div class="node-num">07</div><div class="node-name">Gmail Send</div></div>
+      <div class="arrow">→</div>
+      <div class="node-box pending"><div class="node-num">08</div><div class="node-name">Fear &amp; Greed</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">1–2. Schedule Trigger + Precio simple</div><span class="badge ready">Listo</span></div>
+      <div class="card-desc">Dispara todos los días a las 8:00 AM. El segundo nodo trae el precio spot de ETH desde CoinGecko con una llamada liviana, útil para chequeos rápidos.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">3. Datos completos ETH</div><span class="badge ready">Listo</span></div>
+      <div class="card-desc">Segunda llamada a CoinGecko trayendo variación 24h, 7d, volumen y otros indicadores que el nodo de análisis va a necesitar.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">4. Code (JS) — parseo</div><span class="badge ready">Listo</span></div>
+      <div class="card-desc">Combina las dos respuestas de CoinGecko en un único objeto JSON limpio: precio, cambio 24h, cambio 7d, volumen — listo para pasarle a Claude.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">5. Basic LLM Chain + Anthropic</div><span class="badge ready">Listo</span></div>
+      <div class="card-desc">Claude analiza los datos y redacta el reporte diario: tendencia, volatilidad, señal semafórica (verde/amarillo/rojo) y contexto respecto al ATH.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">6. Google Sheets — log</div><span class="badge ready">Listo</span></div>
+      <div class="card-desc">Guarda cada ejecución en la hoja "Monitor ETH Log": fecha, precio, cambios, volumen, señal y el reporte completo. Es la base de datos histórica del sistema.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">7. Gmail Send</div><span class="badge pending">Pendiente</span></div>
+      <div class="card-desc">Envía el reporte generado al mail del operador. To: email personal · Subject con el precio del día · Message con el reporte completo de Claude.</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">8. Fear &amp; Greed Index</div><span class="badge pending">Pendiente</span></div>
+      <div class="card-desc">HTTP Request a <code>https://api.alternative.me/fng/?limit=1</code>. El resultado se suma al prompt de Claude para enriquecer la señal del reporte.</div>
+    </div>
+  </div>
+
+  <div class="panel" id="instalar">
+    <ol class="steps">
+      <li><b>Confirmar que n8n está corriendo</b> en localhost:5678 y que el flujo "Monitor ETH Diario v1" aparece en la lista de workflows.</li>
+      <li><b>Agregar el nodo Gmail Send</b> al final del flujo, conectado a la salida del nodo Google Sheets. Configurar credencial OAuth2 de Gmail si todavía no está conectada.</li>
+      <li><b>Agregar el nodo HTTP Request para Fear &amp; Greed</b>, apuntando a <code>https://api.alternative.me/fng/?limit=1</code>. No requiere API key.</li>
+      <li><b>Actualizar el prompt del nodo Anthropic</b> para que incluya el valor de Fear &amp; Greed recibido, y lo mencione en el reporte junto a la señal semafórica.</li>
+      <li><b>Ejecutar el flujo manualmente</b> desde el botón "Execute Workflow" y verificar que cada nodo se ejecute sin errores, de punta a punta.</li>
+      <li><b>Confirmar que llega el mail</b> con el reporte completo y que la fila se agregó correctamente en Google Sheets.</li>
+      <li><b>Activar el workflow</b> — toggle de Inactive a Active, arriba a la derecha del editor.</li>
+    </ol>
+  </div>
+
+  <div class="panel" id="reporte">
+    <div class="section-title" style="margin-top:0;">Ejemplo real — reporte del 4 de agosto 2026</div>
+    <div class="report-preview">📊 REPORTE ETH — 4 de Agosto de 2026
+
+💰 Precio: $1.866,48 USD | +0.13% (24h)
+
+📈 Tendencia:
+Movimiento lateral con leve presión bajista semanal (-1.11%), pero
+recuperación mensual sólida del +5.40% que sugiere impulso de fondo vigente.
+
+⚡ Volatilidad: Baja
+Variación de apenas 0.13% en 24h con volumen de ~$6.77B.
+
+🎯 Señal: <span class="signal yellow">🟡 NEUTRAL</span>
+Momentum mensual positivo contrarrestado por debilidad semanal.
+
+📝 Contexto:
+ETH cotiza un 62.3% por debajo de su ATH ($4.946).
+
+⚠️ Análisis informativo. No constituye asesoramiento financiero.</div>
+    <p style="color:var(--text2);font-size:13px;margin-top:14px;">Este reporte se genera hoy sin el bloque de Fear &amp; Greed. Una vez activado el nodo 8, va a aparecer una sección adicional con el índice de sentimiento del mercado.</p>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
