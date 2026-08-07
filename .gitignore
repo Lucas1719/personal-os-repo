@@ -1,0 +1,27 @@
+# Credenciales y secretos — NUNCA subir
+.env
+.env.*
+*.key
+*credentials*
+*secret*
+
+# n8n
+.n8n/
+n8n_data/
+*.n8n.json
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Node
+node_modules/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Datos personales / logs que no son para compartir
+*trading-log*.json
